@@ -1,0 +1,217 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>體重紀錄</title><meta name="theme-color" content="#16a34a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="體重"><link rel="manifest" id="mf">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1f2937;--mu:#6b7280;--bd:#e5e7eb;--ok:#16a34a;--bad:#dc2626;--na:#9ca3af;--pri:#2563eb}
+@media(prefers-color-scheme:dark){:root{--bg:#111418;--card:#1b2027;--tx:#e5e7eb;--mu:#9ca3af;--bd:#2d343e}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,"Noto Sans TC",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:720px;margin:auto;padding:12px;display:grid;gap:12px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+h1{font-size:18px;margin:4px 0}h2{font-size:15px;margin:0 0 8px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.k{text-align:center}.k b{display:block;font-size:20px}.k span{color:var(--mu);font-size:12px}
+label{display:block;font-size:12px;color:var(--mu)}
+input,select,textarea{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+button{padding:8px 12px;border:0;border-radius:8px;background:var(--pri);color:#fff;font:inherit;cursor:pointer}
+button.s{background:var(--bd);color:var(--tx)}button.d{background:var(--bad)}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:696px;margin:auto;padding:12px 14px;border-radius:10px;color:#fff;display:none;z-index:9}
+.chip{display:inline-block;padding:2px 10px;margin:2px;border-radius:99px;border:1px solid var(--bd);font-size:13px}.chip.on{background:var(--ok);color:#fff;border-color:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 4px;border-bottom:1px solid var(--bd);text-align:left}
+.sc{overflow-x:auto}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:110px}
+.w{color:#b45309;font-size:13px}.hint{font-size:13px;color:var(--mu);margin-top:6px;line-height:1.6}#rg button{padding:4px 12px;font-size:13px}
+
+:root{color-scheme:light dark}
+input,select,textarea,button{touch-action:manipulation}
+input,select,textarea{font-size:16px;min-height:44px;min-width:0}
+input[type=date],input[type=datetime-local],input[type=time]{-webkit-appearance:none;appearance:none}
+input[type=checkbox]{min-height:0;height:20px}
+button{min-height:44px}#rg button{min-height:36px}
+summary{padding:6px 0;cursor:pointer}
+main{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+.row>*{flex:1 1 140px}.c7 a{padding:8px 6px;display:inline-block}
+@media(max-width:600px){
+main{padding-top:8px;gap:10px}.c{padding:12px}.k b{font-size:18px}
+h2 small{display:block;margin-top:2px;font-size:12px}#fs{flex:1 1 100%}#toast{font-size:14px}
+#tb tr:first-child{display:none}#tb,#tb tbody{display:block}
+#tb tr{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 0;border-bottom:1px solid var(--bd)}
+#tb td{border:0;padding:0}
+#tb .c1{grid-column:1;font-weight:600}#tb .c2{grid-column:1;color:var(--mu);font-size:12px}
+#tb .c3{grid-column:2;grid-row:1;text-align:right;font-size:18px;font-weight:700}
+#tb .c5{grid-column:2;grid-row:2;text-align:right}
+#tb .c4{grid-column:1;color:var(--mu);font-size:12px}#tb .c4::before{content:"今日目標 "}
+#tb .c6{grid-column:1/-1;font-size:13px}#tb .c6:empty{display:none}
+#tb .c7{grid-column:1/-1;display:flex;gap:16px}
+}
+</style></head><body><main>
+<h1>⚖️ 體重紀錄</h1>
+<details class="c" id="sd"><summary><b>基本資料與目標</b></summary>
+<div style="margin-top:8px"><label>模式</label><select id="md"><option value="lose">減重模式:朝目標體重逐日下降</option><option value="maintain">維持模式:守住目標體重附近</option></select><div id="mh" class="hint"></div></div>
+<div class="g" style="margin-top:8px">
+<div><label>身高 cm</label><input type="number" id="h"></div><div><label>目前/起始體重 kg</label><input type="number" step="0.1" id="w0"></div>
+<div><label id="lw">目標體重 kg</label><input type="number" step="0.1" id="wt"></div><div id="gp"><label>計畫方式</label><select id="pm"><option value="rate">設定每週速率,自動算期間</option><option value="weeks">指定總週數</option></select></div><div id="gw"><label>減重期間 週</label><input type="number" id="wk"></div>
+<div id="gc"><label>每週速率(安全上限) kg/週</label><input type="number" step="0.1" id="cap" value="0.7"></div><div><label>起始日</label><input type="date" id="d0"></div>
+<div id="gb"><label>維持區間 ± kg(允許上下浮動)</label><input type="number" step="0.1" id="bn" value="1"></div></div>
+<div id="cs" style="margin:8px 0"></div><button id="sv">儲存設定</button></details>
+<div class="c" id="bk" style="display:none;border-color:#b45309"></div>
+<div class="c"><div class="g" id="kp"></div><div class="bar" style="margin-top:10px"><i id="pb"></i></div><div id="fc" style="margin-top:8px;font-size:13px"></div><div id="act"></div></div>
+
+<div class="c" id="co"></div>
+<div class="c"><h2 id="fh">新增紀錄 <small id="tc" style="color:var(--mu)"></small></h2>
+<div class="row"><div><label>時間</label><input type="datetime-local" id="ft"></div><div><label>體重 kg</label><input type="number" step="0.1" id="fw" inputmode="decimal"></div><div><label>時段</label><select id="fg"><option>早晨空腹</option><option>睡前</option><option>餐後</option><option>運動後</option><option>一般</option></select></div></div>
+<label style="margin-top:8px">備註(睡眠/聚餐/運動…)</label><input id="fn"><div class="row" style="margin-top:8px"><button id="fs">儲存紀錄</button><button class="s" id="fc2" style="display:none">取消編輯</button></div></div>
+
+<div class="c"><h2>體重趨勢 <small style="color:var(--mu)"><b style="color:var(--ok)">●</b> 達成 <b style="color:var(--bad)">●</b> 未達成 <b style="color:var(--pri)">┅</b> 目標線 <b style="color:#f59e0b">─</b> 7日平均 <b style="color:var(--na)">▮</b> 未記錄</small></h2><div id="rg" style="display:flex;gap:6px;margin-bottom:8px"><button data-r="7">近 7 天</button><button data-r="30">近 30 天</button><button data-r="all">全期</button></div><div class="sc"><svg id="ch" viewBox="0 0 640 300" style="width:100%;display:block"></svg></div><div id="ci" class="hint"></div></div>
+
+<div class="c"><h2>連續達成與徽章</h2><div id="st"></div><div id="bd"></div></div>
+
+<div class="c"><h2>紀錄列表 <select id="tf" style="width:auto;display:inline-block;padding:2px 6px;font-size:13px"><option value="">全部時段</option><option>早晨空腹</option><option>睡前</option><option>餐後</option><option>運動後</option><option>一般</option></select></h2><div class="sc"><table id="tb"></table></div></div>
+
+
+<details class="c"><summary><b>備份、提醒與資料管理</b></summary><div style="margin-top:8px;display:grid;gap:8px">
+<div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.7"><b>💾 資料安全</b><br>你的紀錄儲存在此裝置的瀏覽器中,不會自動同步到其他裝置。<br>⚠️ 清除瀏覽器網站資料、重設裝置或更換裝置,都可能造成紀錄遺失。建議定期備份。</div>
+<div id="le" style="font-size:13px;color:var(--mu)"></div><div id="ps" style="font-size:13px;color:var(--mu)"></div>
+<div class="row"><button id="sh">分享備份(雲端/LINE/郵件)</button><button class="s" id="ec">下載備份 CSV</button><button class="s" id="im">匯入 CSV(覆蓋)</button><button class="s" id="mg">合併匯入 CSV</button><input type="file" id="if" accept=".csv" hidden><button class="s" id="un" style="display:none"></button></div>
+<div class="hint"><b>匯入 CSV(覆蓋)</b>:會把<b>目前所有紀錄</b>換成檔案內容(含目標設定)。<b>合併匯入</b>:以「日期+時間」判斷重複,只補上缺少的紀錄,不刪除也不修改現有紀錄;時間相同但體重不同時,保留目前這一筆。兩種匯入前都會建立快照,可用「還原」復原。</div>
+<div id="cn" style="font-size:13px;color:var(--mu)"></div><div class="row"><button class="d" id="cl">清除紀錄</button><button class="d" id="rs">重置全部資料</button></div><div class="hint">清除紀錄:只刪紀錄,保留目標與提醒。重置全部:紀錄、目標、提醒、徽章全部清空。兩者都會先自動下載 CSV 備份,並可用上方「還原」按鈕復原一次。</div>
+<label style="display:flex;gap:8px;align-items:center;color:var(--tx)"><input type="checkbox" id="rm" style="width:auto"> 開啟提醒</label>
+<div class="row"><div><label>晨起</label><input type="time" id="r1"></div><div><label>睡前</label><input type="time" id="r2"></div></div>
+<div class="w">提醒僅在網頁開啟(含背景分頁)時觸發;iOS 須先「加入主畫面」。要離線/安裝請將 index.html 與 sw.js 放在 HTTPS 網站同一資料夾。</div></div></details>
+</main><div id="intro" role="dialog" aria-modal="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;align-items:center;justify-content:center;padding:16px"><div class="c" style="max-width:420px;width:100%"><h2>💾 資料儲存提醒</h2><p style="margin:0 0 8px">你的體重紀錄目前儲存在此裝置的瀏覽器中,<b>不會自動同步</b>到其他手機或電腦。</p><p style="margin:0 0 8px">如果清除瀏覽器的網站資料、重設裝置或更換裝置,紀錄可能會遺失。</p><p style="margin:0 0 12px">建議定期使用頁面下方「備份、提醒與資料管理」裡的「分享備份」或「下載備份 CSV」。</p><button id="ok1" style="width:100%">知道了,開始使用</button></div></div>
+<div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s),K='wt_v1',pad=n=>String(n).padStart(2,'0');
+let S=JSON.parse(localStorage.getItem(K)||'null')||{cfg:null,rec:[],rem:{on:false,m:'07:30',n:'21:30'},bg:{}},editId=null;
+const sv=()=>localStorage.setItem(K,JSON.stringify(S));
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),today=()=>ymd(new Date());
+const dn=s=>{const[y,m,d]=s.split('-');return Date.UTC(y,m-1,d)/864e5},add=(s,n)=>{const d=new Date(s+'T00:00');d.setDate(d.getDate()+n);return ymd(d)};
+const nowL=()=>{const d=new Date();return ymd(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())};
+const f1=x=>x==null||isNaN(x)?'–':(Math.round(x*10)/10).toFixed(1);
+const dd=()=>{const c=S.cfg;return(c.w0-c.wt)/(c.weeks*7)};
+const endD=()=>add(S.cfg.d0,Math.round(S.cfg.weeks*7));
+const tg=d=>{const c=S.cfg;return c.mode==='maintain'?c.wt:Math.max(c.wt,c.w0-dd()*(dn(d)-dn(c.d0)))};
+const ok=e=>{const c=S.cfg;if(!c)return false;return c.mode==='maintain'?Math.abs(e.w-c.wt)<=c.band:e.w<=tg(e.d)+1e-6};
+const sorted=()=>[...S.rec].sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));
+function days(){const m={};sorted().forEach(e=>{(m[e.d]=m[e.d]||[]).push(e)});return m}
+function dayStat(){const m=days(),o={};for(const d in m){const a=m[d];o[d]={mean:a.reduce((s,e)=>s+e.w,0)/a.length,ok:ok(a[a.length-1])}}return o}
+function streak(f){const o=dayStat();let d=today(),n=0;if(!o[d]){if(!f)return 0;d=add(d,-1)}while(o[d]&&o[d].ok){n++;d=add(d,-1)}return n}
+const MO=['太棒了!今天又贏了自己一次 💪','達標!這就是紀律的力量 🔥','漂亮!曲線正在往下走 📉','做到了,保持這個節奏 🎯','進度領先,今天值得鼓勵自己 🌟','又一次達成!習慣正在養成 ✅','穩穩的!一步一步,終點就在前面 🏁','今天的你,比昨天更接近目標 🚶','數字漂亮,但最漂亮的是你的堅持 👏','目標線被你追上了,繼續保持 📈','每一筆達標,都是在為進度條充電 🔋','不必完美,穩定就是贏 ⭐','今天這筆很扎實,給自己一個讚 👍','你在證明:計畫是可以被做到的 🎉','保持這個步調,不用加速也會到 🐢','好樣的!別忘了喝水、睡飽 💧','一天一點點,累積出大改變 🌱','又往目標靠近一格,感覺不錯吧? 😄','這就是長期主義:不急,但不停 🧭','達成!今晚可以安心睡個好覺 😴','堅持記錄本身就是勝利,今天又加一分 📝','這個數字是你認真生活的證據 ✨','穩定下降中,你的努力有看得見的回報 💚','很棒,下一個目標:明天也來一筆達標 🎯','紀律不是痛苦,是對未來的自己好一點 🌤️','你已經走過這麼多天,別小看自己 🏅','又是一個綠點!圖表越來越好看了 🟢','今天的努力,明天的你會感謝 🙌','不需要拼命,只需要持續,而你正在做到 🚀','目標一天比一天近,繼續穩穩走 🌈'];
+const MB=['這數字可不會自己變好,今晚少一口、多走一步 😤','落後目標了,明天的你會感謝現在的決定','別讓目標線跑太遠,現在就開始追 🏃','差一點而已,別找藉口,補回來!','你設定的目標不是玩玩的吧?證明給自己看 🔥','數字說實話:該收斂一下了','今天輸了一局,但比賽還沒結束,明天扳回來 ⚔️','目標線不會等你,追上去 🏃','偷懶的代價會出現在數字上,別讓它變成習慣 ⚠️','這一筆有點高,想想今天哪裡可以調整 🤔','別找藉口,找方法:晚餐清淡一點、飯後散散步 🚶','你當初為什麼開始?想想那個理由 💭','一天落後沒關係,別讓它變成兩天 ⏰','現在還來得及,從下一餐開始調整 🍽️','數字不會評價你,明天再贏回來 💪','目標線在等你,別讓差距越拉越大 📏','給自己一點壓力:明天這個時間,要看到更低的數字 🎯','今天鬆懈了?沒關係,但明天別再鬆 😤','別讓昨天的自己,看輕今天的你 🔥','水腫、鹽分也會影響,但別把它當萬用藉口 🧂','差距還不大,現在補救最划算 🛠️','動起來吧!哪怕只是多走十分鐘 👟','你說過要做到的,現在是兌現的時候 📣','紅點出現了,讓它成為最後一個 🔴','睡好、喝水、少宵夜,三件小事就能拉回來 🌙','別氣餒也別放縱,回到計畫上就好 🧭','再不追,目標日就要追不上了 📅','沒達標不代表失敗,代表該行動了 ⚡','誠實面對數字,是改變的第一步,再來一次 💥','下一筆,把它變成綠點 🟢'];
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const pick=(t,a)=>{S.bag=S.bag||{};let b=S.bag[t];if(!b||!b.length)b=S.bag[t]=a.map((_,i)=>i).sort(()=>Math.random()-.5);return a[b.pop()%a.length]};
+function toast(t,c){const e=$('#toast');e.textContent=t;e.style.background=c;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',6000)}
+function badgesDef(){return[['first','🌱 首次紀錄'],['s3','🔥 連續3天'],['s7','🏅 連續7天'],['s14','🥈 連續14天'],['s30','🏆 連續30天'],['goal','🎯 達成目標']]}
+function award(){const n=streak(true),c=S.cfg||{},l=sorted(),got=[];const chk=(id,v)=>{if(v&&!S.bg[id]){S.bg[id]=today();got.push(id)}};
+chk('first',l.length>0);chk('s3',n>=3);chk('s7',n>=7);chk('s14',n>=14);chk('s30',n>=30);chk('goal',l.length&&c.mode==='lose'&&l[l.length-1].w<=c.wt);return got}
+function save(){const w=parseFloat($('#fw').value),t=$('#ft').value;if(!S.cfg)return toast('請先設定基本資料與目標','#b45309'),$('#sd').open=true;
+if(!(w>20&&w<400)||!t)return toast('請輸入正確的時間與體重','#b45309');
+const e={id:editId||Date.now(),d:t.slice(0,10),t:t.slice(11),w,g:$('#fg').value,n:$('#fn').value};
+const prev=sorted().filter(x=>x.id!==e.id&&(x.d+x.t)<(e.d+e.t)).pop();
+if(editId)S.rec=S.rec.map(x=>x.id===editId?e:x);else S.rec.push(e);
+const wasEdit=!!editId;editId=null;sv();const good=ok(e);const g=award();sv();
+let msg=good?pick('ok',MO):pick('bad',MB),col=good?'#16a34a':'#dc2626';
+const o=dayStat(),l3=[1,2,3].map(i=>o[add(today(),-i+1)]||o[add(today(),-i)]);
+if(!good&&[0,1,2].every(i=>{const x=o[add(e.d,-i)];return x&&!x.ok}))msg='連續3天未達成:別再自責,檢討是否目標太緊,可到「重新規劃」放寬速度。',col='#b45309';
+if(prev&&prev.w-e.w>1.5&&(Date.parse(e.d+'T'+e.t)-Date.parse(prev.d+'T'+prev.t))<864e5*1.5)msg='⚠️ 短時間掉太快(多為水分),請放慢並注意補充營養與水分。',col='#b45309';
+if(g.length)msg+='  新徽章:'+badgesDef().filter(b=>g.includes(b[0])).map(b=>b[1]).join(' ');
+S.coach={m:msg,c:col};sv();persistNote(true);toast(msg,col);
+$('#fw').value='';$('#fn').value='';$('#ft').value=nowL();$('#fg').value=defTag();$('#fc2').style.display='none';$('#fh').firstChild.textContent='新增紀錄 ';render()}
+const PK=K+'_prev';
+function snap(){localStorage.setItem(PK,JSON.stringify({rec:S.rec,cfg:S.cfg,bg:S.bg,coach:S.coach,rem:S.rem,rng:S.rng,t:Date.now()}))}
+function prevNote(){const b=$('#un'),p=JSON.parse(localStorage.getItem(PK)||'null');b.style.display=p?'':'none';if(p)b.textContent='還原上次匯入/清除前的資料('+new Date(p.t).toLocaleString()+',共 '+p.rec.length+' 筆)'}
+function mark(){S.lastExp=Date.now();sv();backupNote()}
+function backupNote(){prevNote();const b=$('#bk'),l=sorted();$('#cn').textContent=l.length?'目前共 '+l.length+' 筆紀錄('+l[0].d+' ~ '+l[l.length-1].d+')':'目前沒有紀錄';$('#le').textContent=S.lastExp?'上次匯出:'+new Date(S.lastExp).toLocaleString():'尚未匯出過';if(!l.length)return b.style.display='none';
+const ref=S.lastExp||Date.parse(l[0].d+'T'+l[0].t),ms=Date.now()-ref,dys=Math.floor(ms/864e5);
+if(ms>7*864e5){b.innerHTML='💾 '+(S.lastExp?'上次匯出是 '+dys+' 天前':'還沒匯出過備份(最早紀錄在 '+dys+' 天前)')+',建議備份。 <button id="bkb" style="margin-left:6px">立即備份</button>';b.style.display='';$('#bkb').onclick=shareCsv}else b.style.display='none'}
+function dl(n,t,m){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}catch(e){}}
+function regress(){const o=dayStat(),ks=Object.keys(o).sort().slice(-14);if(ks.length<3)return null;const x=ks.map(dn),y=ks.map(k=>o[k].mean),n=x.length,mx=x.reduce((a,b)=>a+b)/n,my=y.reduce((a,b)=>a+b)/n;let nu=0,de=0;x.forEach((v,i)=>{nu+=(v-mx)*(y[i]-my);de+=(v-mx)**2});const s=nu/de;return{s,at:v=>my+s*(v-mx)}}
+function render(){const c=S.cfg,l=sorted(),last=l[l.length-1],kp=$('#kp');
+$('#tc').textContent='今日 '+l.filter(e=>e.d===today()).length+'/2(建議每天至少量測2次)';
+if(!c){kp.innerHTML='<div class="k"><b>👋</b><span>請先展開並填寫「基本資料與目標」</span></div>';$('#sd').open=true}
+else{const cur=last?last.w:c.w0,bmi=c.h?cur/((c.h/100)**2):NaN,pr=c.w0===c.wt?100:Math.max(0,Math.min(100,(c.w0-cur)/(c.w0-c.wt)*100)),t=tg(today());
+kp.innerHTML=[['目前',f1(cur)+' kg'],['今日目標',(c.mode==='maintain'?f1(c.wt-c.band)+'~'+f1(c.wt+c.band):f1(t))+' kg'],['BMI',f1(bmi),bmiTag(bmi)],['每日減量',c.mode==='maintain'?'維持':f1(dd()*1000)+' g'],['進度',f1(pr)+'%']].map(a=>`<div class="k"><b>${a[1]}</b><span>${a[0]}</span>${a[2]||''}</div>`).join('');$('#pb').style.width=pr+'%';
+let fc='',act='',r=regress();
+if(c.mode==='lose'){if(cur<=c.wt)act='<button id="mt" style="margin-top:8px">🎉 已達標,切換維持模式</button>';
+else if(r&&r.s<-0.0001){const dys=Math.ceil((cur-c.wt)/-r.s),ed=add(today(),dys);fc='依近期趨勢預估達標日:<b>'+ed+'</b>(計畫 '+endD()+')';if(ed>add(endD(),14)||cur-t>1.5){fc+=' <span class="w">進度落後</span>';act='<button class="s" id="rp" style="margin-top:8px">重新規劃目標</button>'}}
+else fc=r?'近期趨勢未下降,無法預估達標日':'再記錄幾天後即可預估達標日';
+if(last&&cur-t>1.5&&!act)act='<button class="s" id="rp" style="margin-top:8px">落後較多,重新規劃目標</button>'}
+else fc='維持區間 '+f1(c.wt-c.band)+'~'+f1(c.wt+c.band)+' kg'+(last&&last.w>c.wt+c.band?' <span class="w">已高於上限,請留意</span>':'');
+$('#fc').innerHTML=fc;$('#act').innerHTML=act;if($('#mt'))$('#mt').onclick=()=>{c.mode='maintain';sv();fill();render()};if($('#rp'))$('#rp').onclick=replan;
+chart();}
+backupNote();coach();const s=streak(),yd=dayStat()[today()]?0:streak(true);$('#st').innerHTML='目前連續達成 <b>'+s+'</b> 天'+(yd?'<div class="hint">今天還沒記錄,記錄並達成後會接續昨天為止的 '+yd+' 天</div>':'');$('#bd').innerHTML=badgesDef().map(b=>`<span class="chip ${S.bg[b[0]]?'on':''}">${b[1]}</span>`).join('');
+const fl=$('#tf').value,rows=[...l].reverse().filter(e=>!fl||e.g===fl).slice(0,60);
+$('#tb').innerHTML='<tr><th>時間</th><th>時段</th><th>kg</th><th>目標</th><th>差距</th><th>備註</th><th></th></tr>'+rows.map(e=>{const t=c?(c.mode==='maintain'?c.wt:tg(e.d)):NaN,df=e.w-t,good=c&&ok(e);return`<tr><td class="c1">${e.d.slice(5)} ${e.t}</td><td class="c2">${e.g||''}</td><td class="c3">${f1(e.w)}</td><td class="c4">${f1(t)}</td><td class="c5" style="color:var(--${c?(good?'ok':'bad'):'na'});font-weight:600">${isNaN(df)?'–':(df>0?'+':'')+f1(df)}</td><td class="c6">${(e.n||'').replace(/</g,'&lt;')}</td><td class="c7"><a href="#" data-e="${e.id}">編輯</a> <a href="#" data-x="${e.id}">刪</a></td></tr>`}).join('')}
+function chart(){const c=S.cfg,l=sorted(),svg=$('#ch'),R=S.rng||(c&&c.weeks*7>90?'30':'all');document.querySelectorAll('#rg button').forEach(b=>{b.className=b.dataset.r===R?'':'s'});if(!c)return svg.innerHTML='';
+const W=Math.max(300,Math.round(svg.parentNode.clientWidth)||640),H=W<500?250:300,L=36,Rm=8,T=10,B=24,px=dn(c.d0),endP=px+Math.round(c.weeks*7),lastD=l.length?dn(l[l.length-1].d)+1:0,mt=c.mode==='maintain';
+let x0,x1;if(R==='all'){x0=px;x1=Math.max(endP,lastD,px+7)}else{x1=Math.max(dn(today())+1,lastD);x0=x1-(+R)}
+const xs=e=>dn(e.d)+(+e.t.slice(0,2)*60+ +e.t.slice(3))/1440,tv=v=>Math.max(c.wt,c.w0-dd()*(v-px)),a0=Math.max(x0,px);
+const lp=[a0].concat(endP>a0&&endP<x1?[endP]:[],[x1]),vis=l.filter(e=>{const v=xs(e);return v>=x0&&v<=x1});
+const m=dayStat(),ks=Object.keys(m).sort(),ma=ks.filter(k=>dn(k)>=x0&&dn(k)<x1).map(k=>{const dk=dn(k),w=ks.filter(j=>dn(j)<=dk&&dn(j)>dk-7).map(j=>m[j].mean);return[dk+.5,w.reduce((p,q)=>p+q)/w.length]});
+const ws=vis.map(e=>e.w).concat(ma.map(p=>p[1]),mt?[c.wt-c.band,c.wt+c.band]:lp.map(tv));
+const mn=Math.min(...ws)-.5,mx=Math.max(...ws)+.5,X=v=>L+(v-x0)/(x1-x0)*(W-L-Rm),Y=v=>T+(mx-v)/(mx-mn)*(H-T-B);let o='';
+for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4;o+=`<line x1="${L}" x2="${W-Rm}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--bd)"/><text x="${L-4}" y="${Y(v)+4}" font-size="11" text-anchor="end" fill="var(--mu)">${f1(v)}</text>`}
+const step=Math.ceil((x1-x0)/(W<500?5:8));for(let d=x0;d<=x1;d+=step)o+=`<text x="${X(d)}" y="${H-8}" font-size="11" text-anchor="middle" fill="var(--mu)">${add(c.d0,d-px).slice(5)}</text>`;
+for(let d=a0;d<=Math.min(dn(today()),x1-1);d++){if(!m[add(c.d0,d-px)])o+=`<line x1="${X(d+.5)}" x2="${X(d+.5)}" y1="${H-B-6}" y2="${H-B}" stroke="var(--na)" stroke-width="3"/>`}
+if(mt)o+=`<rect x="${L}" y="${Y(c.wt+c.band)}" width="${W-L-Rm}" height="${Math.abs(Y(c.wt-c.band)-Y(c.wt+c.band))}" fill="var(--ok)" opacity=".12"/>`;
+else o+=`<polyline points="${lp.map(v=>X(v)+','+Y(tv(v))).join(' ')}" fill="none" stroke="var(--pri)" stroke-dasharray="5 4" stroke-width="2"/>`;
+if(ma.length>1)o+=`<polyline points="${ma.map(p=>X(p[0])+','+Y(p[1])).join(' ')}" fill="none" stroke="#f59e0b" stroke-width="2.5"/>`;
+vis.forEach(e=>{o+=`<circle cx="${X(xs(e))}" cy="${Y(e.w)}" r="${R==='all'&&x1-x0>120?3:(W<500?5.5:4.5)}" fill="var(--${ok(e)?'ok':'bad'})" stroke="var(--card)" stroke-width="1.5"><title>${e.d} ${e.t} ${e.g||''} ${f1(e.w)}kg</title></circle>`});svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.innerHTML=o}
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(chart,150)});$('#ch').onclick=ev=>{const c=ev.target.closest('circle');$('#ci').textContent=c?c.textContent:''};
+document.querySelectorAll('#rg button').forEach(b=>b.onclick=()=>{S.rng=b.dataset.r;sv();chart()});
+function fill(){const c=S.cfg||{};$('#h').value=c.h||'';$('#w0').value=c.w0||'';$('#wt').value=c.wt||'';$('#wk').value=c.weeks?Math.round(c.weeks*10)/10:'';$('#pm').value=c.pm||(c.weeks?'weeks':'rate');$('#cap').value=c.cap||0.7;$('#d0').value=c.d0||today();$('#bn').value=c.band||1;$('#md').value=c.mode||'lose';$('#rm').checked=S.rem.on;$('#r1').value=S.rem.m;$('#r2').value=S.rem.n;pv()}
+function calc(){const c={h:+$('#h').value,w0:+$('#w0').value,wt:+$('#wt').value,cap:+$('#cap').value||.7,d0:$('#d0').value||today(),band:+$('#bn').value||1,mode:$('#md').value,pm:$('#pm').value};const loss=c.w0-c.wt;c.weeks=c.pm==='rate'?(loss>0?loss/c.cap:0):+$('#wk').value;return c}
+function warns(c,rate){const w=[],bmi=c.h?c.wt/((c.h/100)**2):99;if(rate>c.cap+1e-9)w.push('每週需減 '+f1(rate)+' kg,超過安全上限 '+c.cap+' kg/週');if(rate>c.w0*.01)w.push('超過每週體重 1%');if(bmi<18.5)w.push('目標體重 BMI '+f1(bmi)+' 低於 18.5');return w}
+function pv(){const mt=$('#md').value==='maintain',r=$('#pm').value==='rate';$('#gp').style.display=mt?'none':'';$('#gc').style.display=mt||!r?'none':'';$('#gw').style.display=mt||r?'none':'';$('#gb').style.display=mt?'':'none';$('#lw').textContent=mt?'要維持的體重 kg':'目標體重 kg';
+const b=+$('#bn').value||1,t=+$('#wt').value;
+$('#mh').innerHTML=mt?'維持模式:達標後用來守住體重。以「目標體重」為中心,落在 ± 區間內的紀錄都算達成'+(t>20?'(目前設定:<b>'+f1(t-b)+' ~ '+f1(t+b)+' kg</b>)':'(例如目標 65、區間 ±1 → 64~66 kg 算達成)')+';高於上限會提醒,低於下限也不算達成,避免瘦過頭。圖上以綠色帶狀區間顯示。此模式不需要設定期間或每週速率。':'減重模式:依起始體重、目標體重與期間,算出一條逐日下降的目標線,每次紀錄 ≤ 當天目標就算達成。達標後,首頁會出現按鈕讓你切換到維持模式。';const c=calc(),el=$('#cs');
+if(c.mode!=='lose'||!(c.w0>20&&c.wt>20&&c.wt<c.w0&&c.weeks>0))return el.innerHTML='';
+const rate=(c.w0-c.wt)/c.weeks,w=warns(c,rate);
+el.innerHTML='試算:共 <b>'+f1(c.weeks)+'</b> 週('+Math.round(c.weeks*7)+' 天),每週 <b>'+f1(rate)+' kg</b>,每日約 <b>'+f1(rate/7*1000)+' g</b>,預計 <b>'+add(c.d0,Math.round(c.weeks*7))+'</b> 達標'+(w.length?'<div class="w">⚠️ '+w.join(';')+'</div>':'')}
+$('#sv').onclick=()=>{const c=calc();if(c.mode==='maintain'&&!(c.weeks>0))c.weeks=1;
+if(!(c.w0>20&&c.wt>20&&c.weeks>0))return toast('請填寫完整資料','#b45309');
+if(c.mode==='lose'&&c.wt>=c.w0)return toast('目標體重需低於起始體重(或改用維持模式)','#b45309');
+const w=c.mode==='lose'?warns(c,(c.w0-c.wt)/c.weeks):[];
+if(w.length&&!confirm('安全提醒:\n'+w.join('\n')+'\n\n仍要儲存嗎?'))return;
+S.cfg=c;sv();toast('設定已儲存','#16a34a');$('#sd').open=false;render()};
+['h','w0','wt','wk','cap','d0','bn','md','pm'].forEach(i=>$('#'+i).oninput=pv);
+const defTag=()=>{const h=new Date().getHours();return h>=20||h<4?'睡前':h<10?'早晨空腹':'一般'};
+function bmiTag(b){if(isNaN(b))return'';const[t,c]=b<18.5?['過輕','#d97706']:b<24?['正常','#16a34a']:b<27?['過重','#d97706']:['肥胖','#dc2626'];return`<div style="margin-top:2px"><span class="chip" style="background:${c};color:#fff;border-color:${c}">${t}</span></div>`}
+function coach(){const c=S.cfg,e=$('#co');const t=c?(c.mode==='maintain'?'維持區間 '+f1(c.wt-c.band)+'~'+f1(c.wt+c.band)+' kg':'今日理想目標 '+f1(tg(today()))+' kg'):'尚未設定目標';const k=S.coach||{m:'歡迎!設定好目標後,每天早晚各記錄一次,這裡會顯示最近一次的回饋與建議。',c:'#2563eb'};e.style.borderLeft='5px solid '+k.c;e.innerHTML='<div style="font-size:12px;color:var(--mu)">🧭 教練回饋 · '+t+'</div><div style="margin-top:4px">'+k.m+'</div>'}
+function replan(){const c=S.cfg,l=sorted(),cur=l[l.length-1].w,sug=Math.max(1,Math.ceil((cur-c.wt)/c.cap)),v=prompt('重新規劃:從目前體重 '+f1(cur)+' kg 起算,預計幾週達標?\n(依安全上限建議至少 '+sug+' 週)',sug);if(!v||!(+v>0))return;S.cfg={...c,w0:cur,d0:today(),weeks:+v,pm:'weeks'};sv();fill();render();toast('已重新規劃目標','#16a34a')}
+$('#fs').onclick=save;$('#fc2').onclick=()=>{editId=null;$('#fw').value='';$('#fn').value='';$('#ft').value=nowL();$('#fg').value=defTag();$('#fc2').style.display='none';$('#fh').firstChild.textContent='新增紀錄 '};
+$('#tb').onclick=ev=>{const a=ev.target.closest('a');if(!a)return;ev.preventDefault();if(a.dataset.x){if(confirm('刪除此紀錄?')){S.rec=S.rec.filter(e=>e.id!=a.dataset.x);sv();render()}}else{const e=S.rec.find(x=>x.id==a.dataset.e);editId=e.id;$('#ft').value=e.d+'T'+e.t;$('#fw').value=e.w;$('#fn').value=e.n;$('#fg').value=e.g||'一般';$('#fc2').style.display='';$('#fh').firstChild.textContent='編輯紀錄 ';scrollTo(0,0)}};
+const q=x=>'"'+String(x==null?'':x).replace(/"/g,'""')+'"';
+const csvText=()=>'\ufeffdate,time,tag,weight,note\n'+['#config,,,,'+q(JSON.stringify(S.cfg||{}))].concat(sorted().map(e=>[e.d,e.t,q(e.g),e.w,q(e.n)].join(','))).join('\n');
+const backupCsv=()=>{mark();dl('weight-backup-'+today()+'.csv',csvText(),'text/csv')};
+$('#ec').onclick=backupCsv;$('#sh').onclick=shareCsv;
+async function shareCsv(){const f=new File([csvText()],'weight-backup-'+today()+'.csv',{type:'text/csv'});
+if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'體重備份'});mark();toast('備份已送出','#16a34a')}catch(e){if(e.name!=='AbortError'){toast('分享失敗,改為下載','#b45309');backupCsv()}}}
+else{toast('此瀏覽器不支援檔案分享(需 HTTPS),改為下載','#b45309');backupCsv()}}
+async function persistNote(ask){const el=$('#ps');if(!(navigator.storage&&navigator.storage.persisted)){el.textContent='此瀏覽器不支援持久儲存設定';return}
+try{let ok=await navigator.storage.persisted();if(!ok&&ask&&navigator.storage.persist)ok=await navigator.storage.persist();
+el.textContent=ok?'持久儲存:已啟用(瀏覽器空間不足時不會自動清除;手動清除網站資料仍會刪除)':'持久儲存:未啟用(空間不足時瀏覽器可能清除資料,請定期備份)'}catch(e){}}
+function wipe(all){const n=S.rec.length;
+if(all){if((prompt('這會刪除全部紀錄、目標設定與提醒設定(目前 '+n+' 筆紀錄)。\n清除前會自動下載 CSV 備份,之後也可按「還原」復原。\n確定請輸入「重置」:')||'').trim()!=='重置')return}
+else{if(!n)return toast('目前沒有紀錄可清除','#b45309');if(!confirm('要清除全部 '+n+' 筆紀錄嗎?\n(目標設定與提醒會保留)\n清除前會自動下載 CSV 備份。'))return}
+if(n||S.cfg)backupCsv();snap();
+if(all)S={cfg:null,rec:[],rem:{on:false,m:'07:30',n:'21:30'},bg:{},lastExp:S.lastExp,intro:S.intro};else{S.rec=[];S.bg={};S.coach=null}
+editId=null;sv();fill();render();toast(all?'已重置全部資料':'已清除 '+n+' 筆紀錄(可按「還原」復原)','#16a34a')}
+$('#cl').onclick=()=>wipe(false);$('#rs').onclick=()=>wipe(true);
+function parseCsv(t){const r=[];let a=[],f='',u=false;t=t.replace(/^\ufeff/,'');for(let i=0;i<t.length;i++){const c=t[i];if(u){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else u=false}else f+=c}else if(c=='"')u=true;else if(c==','){a.push(f);f=''}else if(c=='\n'||c=='\r'){if(c=='\r'&&t[i+1]=='\n')i++;a.push(f);f='';r.push(a);a=[]}else f+=c}if(f!==''||a.length){a.push(f);r.push(a)}return r}
+let impMode='replace';$('#im').onclick=()=>{impMode='replace';$('#if').click()};$('#mg').onclick=()=>{impMode='merge';$('#if').click()};
+$('#un').onclick=()=>{const p=JSON.parse(localStorage.getItem(PK)||'null');if(!p||!confirm('還原到 '+new Date(p.t).toLocaleString()+' 的資料('+p.rec.length+' 筆)?目前資料會換成可再還原的快照。'))return;snap();S.rec=p.rec;S.cfg=p.cfg;S.bg=p.bg||{};S.coach=p.coach;if(p.rem)S.rem=p.rem;S.rng=p.rng;sv();fill();render();toast('已還原','#16a34a')};
+$('#if').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const r=parseCsv(await f.text()).filter(a=>a.length>1||a[0]),h=r.shift().map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);if(ix('date')<0||ix('weight')<0)throw 0;
+let cfg=null,bad=0;const rs=[];r.forEach((a,i)=>{const d=(a[ix('date')]||'').trim();if(d==='#config'){try{cfg=JSON.parse(a[ix('note')])}catch(e){}return}const w=+a[ix('weight')];if(/^\d{4}-\d\d-\d\d$/.test(d)&&w>20)rs.push({id:Date.now()+i,d,t:(a[ix('time')]||'07:00').trim(),g:ix('tag')<0?'':a[ix('tag')]||'',w,n:ix('note')<0?'':a[ix('note')]||''});else bad++});
+const hc=cfg&&cfg.w0;if(!rs.length&&!hc)throw 0;
+if(impMode==='merge'){const key=e=>e.d+' '+e.t,have=new Map(S.rec.map(e=>[key(e),e])),nw=[];let dup=0,diff=0;rs.forEach(e=>{const k=key(e),o=have.get(k);if(o){dup++;if(o.w!==e.w)diff++}else{have.set(k,e);nw.push(e)}});
+if(!nw.length&&!(hc&&!S.cfg)){toast('沒有需要新增的紀錄(重複 '+dup+' 筆)','#b45309');ev.target.value='';return}
+if(!confirm('合併匯入:新增 '+nw.length+' 筆;略過重複 '+dup+' 筆'+(diff?'(其中 '+diff+' 筆體重不同,保留目前版本)':'')+(bad?';無效 '+bad+' 列':'')+'。\n現有紀錄不會被刪除。確定?')){ev.target.value='';return}
+snap();S.rec=S.rec.concat(nw);if(hc&&!S.cfg)S.cfg=cfg;award();sv();fill();render();toast('已合併,新增 '+nw.length+' 筆','#16a34a');ev.target.value='';return}
+if(!confirm('匯入 '+rs.length+' 筆紀錄'+(hc?'與目標設定':'')+(bad?'(略過 '+bad+' 列無效資料)':'')+'。\n⚠️ 目前 '+S.rec.length+' 筆紀錄將被全部覆蓋(之後可用「還原」按鈕復原)。確定?'))return;snap();
+S.rec=rs;if(hc)S.cfg=cfg;S.bg={};award();sv();fill();render();toast('匯入完成','#16a34a')}catch(e){toast('檔案格式錯誤','#dc2626')}ev.target.value=''};
+['rm','r1','r2'].forEach(i=>$('#'+i).onchange=async()=>{S.rem={on:$('#rm').checked,m:$('#r1').value,n:$('#r2').value};if(S.rem.on&&'Notification'in window&&Notification.permission==='default')await Notification.requestPermission();sv()});
+setInterval(()=>{if(!S.rem.on||!('Notification'in window)||Notification.permission!=='granted')return;const d=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());if((hm===S.rem.m||hm===S.rem.n)&&setInterval.l!==today()+hm){setInterval.l=today()+hm;new Notification('該量體重了 ⚖️',{body:hm===S.rem.m?'晨起量一下,記錄今天的起點':'睡前量一下,收個尾'})}},20000);
+try{$('#mf').href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify({name:'體重紀錄',short_name:'體重',display:'standalone',start_url:location.href,background_color:'#16a34a',theme_color:'#16a34a',icons:[{src:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#16a34a"/><text x="50" y="68" font-size="56" text-anchor="middle">⚖️</text></svg>'),sizes:'any',type:'image/svg+xml',purpose:'any'}]}))}catch(e){}
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+persistNote(true);fill();$('#ft').value=nowL();$('#fg').value=defTag();$('#tf').onchange=render;render();if(!S.intro)$('#intro').style.display='flex';$('#ok1').onclick=()=>{S.intro=1;sv();$('#intro').style.display='none'};
+</script></body></html>
