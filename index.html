@@ -124,19 +124,19 @@ function backupNote(){prevNote();const b=$('#bk'),l=sorted();$('#cn').textConten
 const ref=S.lastExp||Date.parse(l[0].d+'T'+l[0].t),ms=Date.now()-ref,dys=Math.floor(ms/864e5);
 if(ms>7*864e5){b.innerHTML='💾 '+(S.lastExp?'上次匯出是 '+dys+' 天前':'還沒匯出過備份(最早紀錄在 '+dys+' 天前)')+',建議備份。 <button id="bkb" style="margin-left:6px">立即備份</button>';b.style.display='';$('#bkb').onclick=shareCsv}else b.style.display='none'}
 function dl(n,t,m){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}catch(e){}}
-function regress(){const o=dayStat(),ks=Object.keys(o).sort().slice(-14);if(ks.length<3)return null;const x=ks.map(dn),y=ks.map(k=>o[k].mean),n=x.length,mx=x.reduce((a,b)=>a+b)/n,my=y.reduce((a,b)=>a+b)/n;let nu=0,de=0;x.forEach((v,i)=>{nu+=(v-mx)*(y[i]-my);de+=(v-mx)**2});const s=nu/de;return{s,at:v=>my+s*(v-mx)}}
+function regress(){const o=dayStat(),ks=Object.keys(o).sort().slice(-14);if(ks.length<7)return null;const x=ks.map(dn),y=ks.map(k=>o[k].mean),n=x.length,mx=x.reduce((a,b)=>a+b)/n,my=y.reduce((a,b)=>a+b)/n;let nu=0,de=0;x.forEach((v,i)=>{nu+=(v-mx)*(y[i]-my);de+=(v-mx)**2});const s=nu/de;return{s,at:v=>my+s*(v-mx)}}
 function render(){const c=S.cfg,l=sorted(),last=l[l.length-1],kp=$('#kp');
 $('#tc').textContent='今日 '+l.filter(e=>e.d===today()).length+'/2';
 if(!c){kp.innerHTML='<div class="k"><b>👋</b><span>請先展開下方「基本資料與目標」</span></div>';$('#sd').open=true}
 else{const cur=last?last.w:c.w0,bmi=c.h?cur/((c.h/100)**2):NaN,pr=c.w0===c.wt?100:Math.max(0,Math.min(100,(c.w0-cur)/(c.w0-c.wt)*100)),t=tg(today());
 kp.innerHTML=[['目前',f1(cur)+' kg'],['今日目標',(c.mode==='maintain'?f1(c.wt-c.band)+'~'+f1(c.wt+c.band):f1(t))+' kg'],['BMI',f1(bmi),bmiTag(bmi)],['每日減量',c.mode==='maintain'?'維持':f1(dd()*1000)+' g'],['進度',f1(pr)+'%']].map(a=>`<div class="k"><b>${a[1]}</b><span>${a[0]}</span>${a[2]||''}</div>`).join('');$('#pb').style.width=pr+'%';
 let fc='',act='',r=regress();
-if(c.mode==='lose'){const gap=last?cur-t:0;let tr='';
+if(c.mode==='lose'){const gap=last?cur-t:0;
 if(cur<=c.wt)act='<button id="mt" style="margin-top:8px">🎉 已達標,切換維持模式</button>';
-else{let late=false;if(r&&r.s<-0.0001){const ed=add(today(),Math.ceil((cur-c.wt)/-r.s));tr='依近期趨勢預估達標日:<b>'+ed+'</b>(計畫 '+endD()+')';late=ed>add(endD(),14)}
-else tr=r?'近期趨勢未下降,無法預估達標日':'再記錄幾天後即可預估達標日';
-if(last){if(gap<=0)tr+=' <span style="color:var(--ok)">✅ '+(gap<0?'領先今日目標 '+f1(-gap)+' kg':'符合今日目標')+'</span>';
-else if(gap>1.5||late){tr+=' <span class="w">進度落後</span>';act='<button class="s" id="rp" style="margin-top:8px">重新規劃目標</button>'}}
+else if(last&&gap<=0)fc='<span style="color:var(--ok)">✅ '+(gap<0?'領先今日目標 '+f1(-gap)+' kg':'符合今日目標')+'</span>(維持計畫速度預計 '+endD()+' 達標)';
+else{let late=false,tr='';if(r&&r.s<-0.0001){const ed=add(today(),Math.ceil((cur-c.wt)/-r.s));tr='依近期趨勢預估達標日:<b>'+ed+'</b>(計畫 '+endD()+')';late=ed>add(endD(),14)}
+else tr=r?'近期趨勢未下降,無法預估達標日':'紀錄滿 7 天後可預估達標日';
+if(last&&(gap>1.5||late)){tr+=' <span class="w">進度落後</span>';act='<button class="s" id="rp" style="margin-top:8px">重新規劃目標</button>'}
 fc=tr}}
 else fc='維持區間 '+f1(c.wt-c.band)+'~'+f1(c.wt+c.band)+' kg'+(last&&last.w>c.wt+c.band?' <span class="w">已高於上限,請留意</span>':'');
 $('#fc').innerHTML=fc;$('#act').innerHTML=act;if($('#mt'))$('#mt').onclick=()=>{c.mode='maintain';sv();fill();render()};if($('#rp'))$('#rp').onclick=replan;
