@@ -110,6 +110,7 @@ function days(){const m={};sorted().forEach(e=>{(m[e.d]=m[e.d]||[]).push(e)});re
 function dayStat(){const m=days(),o={};for(const d in m){const a=m[d];o[d]={mean:a.reduce((s,e)=>s+e.w,0)/a.length,ok:ok(a[a.length-1])}}return o}
 function streak(f){const o=dayStat();let d=today(),n=0;if(!o[d]){if(!f)return 0;d=add(d,-1)}while(o[d]&&o[d].ok){n++;d=add(d,-1)}return n}
 const MO=['太棒了!今天又贏了自己一次 💪','達標!這就是紀律的力量 🔥','漂亮!曲線正在往下走 📉','做到了,保持這個節奏 🎯','進度領先,今天值得鼓勵自己 🌟','又一次達成!習慣正在養成 ✅','穩穩的!一步一步,終點就在前面 🏁','今天的你,比昨天更接近目標 🚶','數字漂亮,但最漂亮的是你的堅持 👏','目標線被你追上了,繼續保持 📈','每一筆達標,都是在為進度條充電 🔋','不必完美,穩定就是贏 ⭐','今天這筆很扎實,給自己一個讚 👍','你在證明:計畫是可以被做到的 🎉','保持這個步調,不用加速也會到 🐢','好樣的!別忘了喝水、睡飽 💧','一天一點點,累積出大改變 🌱','又往目標靠近一格,感覺不錯吧? 😄','這就是長期主義:不急,但不停 🧭','達成!今晚可以安心睡個好覺 😴','堅持記錄本身就是勝利,今天又加一分 📝','這個數字是你認真生活的證據 ✨','穩定下降中,你的努力有看得見的回報 💚','很棒,下一個目標:明天也來一筆達標 🎯','紀律不是痛苦,是對未來的自己好一點 🌤️','你已經走過這麼多天,別小看自己 🏅','又是一個綠點!圖表越來越好看了 🟢','今天的努力,明天的你會感謝 🙌','不需要拼命,只需要持續,而你正在做到 🚀','目標一天比一天近,繼續穩穩走 🌈'];
+const ML=['領先超過兩週的進度!照這個節奏,終點比預期更近 🚀','你已經跑在計畫前面了,繼續穩穩走就好 🏃','提早達標看起來很有機會,但不必加速,維持節奏最重要 🐢','領先不是運氣,是這幾天每一次紀錄累積出來的 🌟','進度條大幅領先!記得多喝水、睡飽,別讓身體太累 💧','你已經為自己存下一段緩衝,偶爾一天持平也不用緊張 😌','比計畫快這麼多,先給自己一個大大的讚 👏','領先很多的時候最容易想再衝一把,穩定比速度更重要 ⚖️','照這個速度,目標日可能會提早到來,保持就好 📅','兩週以上的領先,證明你的方法有效,繼續保持 ✅'];
 const MB=['這數字可不會自己變好,今晚少一口、多走一步 😤','落後目標了,明天的你會感謝現在的決定','別讓目標線跑太遠,現在就開始追 🏃','差一點而已,別找藉口,補回來!','你設定的目標不是玩玩的吧?證明給自己看 🔥','數字說實話:該收斂一下了','今天輸了一局,但比賽還沒結束,明天扳回來 ⚔️','目標線不會等你,追上去 🏃','偷懶的代價會出現在數字上,別讓它變成習慣 ⚠️','這一筆有點高,想想今天哪裡可以調整 🤔','別找藉口,找方法:晚餐清淡一點、飯後散散步 🚶','你當初為什麼開始?想想那個理由 💭','一天落後沒關係,別讓它變成兩天 ⏰','現在還來得及,從下一餐開始調整 🍽️','數字不會評價你,明天再贏回來 💪','目標線在等你,別讓差距越拉越大 📏','給自己一點壓力:明天這個時間,要看到更低的數字 🎯','今天鬆懈了?沒關係,但明天別再鬆 😤','別讓昨天的自己,看輕今天的你 🔥','水腫、鹽分也會影響,但別把它當萬用藉口 🧂','差距還不大,現在補救最划算 🛠️','動起來吧!哪怕只是多走十分鐘 👟','你說過要做到的,現在是兌現的時候 📣','紅點出現了,讓它成為最後一個 🔴','睡好、喝水、少宵夜,三件小事就能拉回來 🌙','別氣餒也別放縱,回到計畫上就好 🧭','再不追,目標日就要追不上了 📅','沒達標不代表失敗,代表該行動了 ⚡','誠實面對數字,是改變的第一步,再來一次 💥','下一筆,把它變成綠點 🟢'];
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const pick=(t,a)=>{S.bag=S.bag||{};let b=S.bag[t];if(!b||!b.length)b=S.bag[t]=a.map((_,i)=>i).sort(()=>Math.random()-.5);return a[b.pop()%a.length]};
@@ -124,7 +125,8 @@ const e={id:editId||nid(),d:t.slice(0,10),t:t.slice(11),w,g:$('#fg').value,n:$('
 const prev=sorted().filter(x=>x.id!==e.id&&(x.d+x.t)<(e.d+e.t)).pop();
 if(editId&&S.rec.some(x=>x.id===editId))S.rec=S.rec.map(x=>x.id===editId?e:x);else S.rec.push(e);
 const wasEdit=!!editId;editId=null;sv();const good=ok(e);const g=award();sv();
-let msg=good?pick('ok',MO):pick('bad',MB),col=good?'#16a34a':'#dc2626';
+const pl=planAt(e.d),dpl=(pl.w0-pl.wt)/(pl.weeks*7),lead=pl.mode==='lose'&&dpl>0&&e.w>pl.wt?(tg(e.d)-e.w)/dpl:0;
+let msg=good?(lead>=14?pick('lead',ML):pick('ok',MO)):pick('bad',MB),col=good?'#16a34a':'#dc2626';
 const o=dayStat(),l3=[1,2,3].map(i=>o[add(today(),-i+1)]||o[add(today(),-i)]);
 if(!good&&[0,1,2].every(i=>{const x=o[add(e.d,-i)];return x&&!x.ok}))msg='連續3天未達成:別再自責,檢討是否目標太緊,可到「重新規劃」放寬速度。',col='#b45309';
 if(prev&&prev.w-e.w>1.5&&(Date.parse(e.d+'T'+e.t)-Date.parse(prev.d+'T'+prev.t))<864e5*1.5)msg='⚠️ 短時間掉太快(多為水分),請放慢並注意補充營養與水分。',col='#b45309';
@@ -148,7 +150,9 @@ kp.innerHTML=[['目前',f1(cur)+' kg'],['今日目標',(c.mode==='maintain'?f1(c
 let fc='',act='',r=regress();
 if(c.mode==='lose'){const gap=last?cur-t:0;
 if(cur<=c.wt)act='<button id="mt" style="margin-top:8px">🎉 已達標,切換維持模式</button>';
-else if(last&&gap<=0)fc='<span style="color:var(--ok)">✅ '+(gap<0?'領先今日目標 '+f1(-gap)+' kg':'符合今日目標')+'</span>(維持計畫速度預計 '+endD()+' 達標)';
+else if(last&&gap<=0){const dp=dd(),ld=dp>0?-gap/dp:0;
+if(ld>=14){const n=Math.floor(ld);fc='<span style="color:var(--ok)">✅ 領先今日目標 '+f1(-gap)+' kg(約 '+n+' 天的進度)</span>,維持計畫速度可提早約 <b>'+n+'</b> 天,預計 <b>'+add(today(),Math.ceil((cur-c.wt)/dp))+'</b> 達標<div class="hint">不必為了提早而加速,維持原本節奏就好。</div>'}
+else fc='<span style="color:var(--ok)">✅ '+(gap<0?'領先今日目標 '+f1(-gap)+' kg':'符合今日目標')+'</span>(維持計畫速度預計 '+endD()+' 達標)'}
 else{let late=false,tr='';if(r&&r.s<-0.0001){const ed=add(today(),Math.ceil((cur-c.wt)/-r.s));tr='依近期趨勢預估達標日:<b>'+ed+'</b>(計畫 '+endD()+')';late=ed>add(endD(),14)}
 else tr=r?'近期趨勢未下降,無法預估達標日':'紀錄滿 7 天後可預估達標日';
 if(last&&(gap>1.5||late)){tr+=' <span class="w">進度落後</span>';act='<button class="s" id="rp" style="margin-top:8px">重新規劃目標</button>'}
