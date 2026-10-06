@@ -81,16 +81,30 @@ h2 small{display:block;margin-top:2px;font-size:12px}#fs{flex:1 1 100%}#toast{fo
 <div id="toast"></div>
 <script>
 const $=s=>document.querySelector(s),K='wt_v1',pad=n=>String(n).padStart(2,'0');
-let S=JSON.parse(localStorage.getItem(K)||'null')||{cfg:null,rec:[],rem:{on:false,m:'07:30',n:'21:30'},bg:{}},editId=null;
-const sv=()=>localStorage.setItem(K,JSON.stringify(S));
+const DEF=()=>({cfg:null,rec:[],rem:{on:false,m:'07:30',n:'21:30'},bg:{}});
+function load(){try{const p=JSON.parse(localStorage.getItem(K)||'null');if(p&&typeof p==='object'&&Array.isArray(p.rec))return Object.assign(DEF(),p)}catch(e){try{localStorage.setItem(K+'_corrupt',localStorage.getItem(K))}catch(_){}setTimeout(()=>toast('資料讀取失敗,已用空白資料開始(原始內容另存在 '+K+'_corrupt)','#dc2626'),0)}return DEF()}
+let S=load(),editId=null;
+const sv=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){setTimeout(()=>toast('⚠️ 資料未能儲存(瀏覽器儲存空間不足或被停用),請立即下載備份 CSV','#dc2626'),60)}};
 const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),today=()=>ymd(new Date());
 const dn=s=>{const[y,m,d]=s.split('-');return Date.UTC(y,m-1,d)/864e5},add=(s,n)=>{const d=new Date(s+'T00:00');d.setDate(d.getDate()+n);return ymd(d)};
 const nowL=()=>{const d=new Date();return ymd(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())};
 const f1=x=>x==null||isNaN(x)?'–':(Math.round(x*10)/10).toFixed(1);
+let lastId=0;const nid=()=>lastId=Math.max(Date.now()*1000,lastId+1);
+const TAGS=['早晨空腹','睡前','餐後','運動後','一般'],r1=x=>Math.round(x*10)/10;
+const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nD=x=>{const m=String(x||'').trim().match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);return m&&+m[2]>=1&&+m[2]<=12&&+m[3]>=1&&+m[3]<=31?m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]):''};
+const nT=x=>{const m=String(x||'').trim().match(/^(\d{1,2}):(\d{2})/);return m&&+m[1]<24&&+m[2]<60?pad(+m[1])+':'+m[2]:'07:00'};
+function cleanCfg(c){if(!c||typeof c!=='object')return null;const o={h:+c.h||0,w0:+c.w0,wt:+c.wt,weeks:+c.weeks,cap:+c.cap||.7,band:+c.band||1,mode:c.mode==='maintain'?'maintain':'lose',pm:c.pm==='rate'?'rate':'weeks',d0:nD(c.d0)};
+if(!(o.w0>20&&o.w0<400&&o.wt>20&&o.wt<400&&o.weeks>0&&o.d0))return null;
+o.hist=(Array.isArray(c.hist)?c.hist:[]).map(h=>{h=h||{};const p={until:nD(h.until),mode:h.mode==='maintain'?'maintain':'lose',w0:+h.w0,wt:+h.wt,weeks:+h.weeks,d0:nD(h.d0),band:+h.band||1};return p.until&&p.d0&&p.w0>20&&p.wt>20&&p.weeks>0?p:null}).filter(Boolean).sort((a,b)=>a.until<b.until?-1:1);return o}
+const PF=['mode','w0','wt','weeks','d0','band'];
+function pushHist(old){const h=(old.hist||[]).slice();if(S.rec.length){const o={until:today()};PF.forEach(k=>o[k]=old[k]);h.push(o)}return h}
+const planAt=d=>{const c=S.cfg;for(const h of c.hist||[])if(d<h.until)return h;return c};
+async function notify(t,b){try{new Notification(t,{body:b});return}catch(e){}try{const r=await navigator.serviceWorker.getRegistration();if(r)await r.showNotification(t,{body:b})}catch(e){}}
 const dd=()=>{const c=S.cfg;return(c.w0-c.wt)/(c.weeks*7)};
 const endD=()=>add(S.cfg.d0,Math.round(S.cfg.weeks*7));
-const tg=d=>{const c=S.cfg;return c.mode==='maintain'?c.wt:Math.max(c.wt,c.w0-dd()*(dn(d)-dn(c.d0)))};
-const ok=e=>{const c=S.cfg;if(!c)return false;return c.mode==='maintain'?Math.abs(e.w-c.wt)<=c.band:e.w<=tg(e.d)+1e-6};
+const tg=d=>{const c=planAt(d);return c.mode==='maintain'?c.wt:r1(Math.min(c.w0,Math.max(c.wt,c.w0-(c.w0-c.wt)/(c.weeks*7)*(dn(d)-dn(c.d0)))))};
+const ok=e=>{const c=S.cfg;if(!c)return false;const p=planAt(e.d);return p.mode==='maintain'?Math.abs(e.w-p.wt)<=p.band+1e-9:e.w<=tg(e.d)+1e-6};
 const sorted=()=>[...S.rec].sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));
 function days(){const m={};sorted().forEach(e=>{(m[e.d]=m[e.d]||[]).push(e)});return m}
 function dayStat(){const m=days(),o={};for(const d in m){const a=m[d];o[d]={mean:a.reduce((s,e)=>s+e.w,0)/a.length,ok:ok(a[a.length-1])}}return o}
@@ -105,9 +119,10 @@ function award(){const n=streak(true),c=S.cfg||{},l=sorted(),got=[];const chk=(i
 chk('first',l.length>0);chk('s3',n>=3);chk('s7',n>=7);chk('s14',n>=14);chk('s30',n>=30);chk('goal',l.length&&c.mode==='lose'&&l[l.length-1].w<=c.wt);return got}
 function save(){const w=parseFloat($('#fw').value),t=$('#ft').value;if(!S.cfg)return toast('請先設定基本資料與目標','#b45309'),$('#sd').open=true;
 if(!(w>20&&w<400)||!t)return toast('請輸入正確的時間與體重','#b45309');
-const e={id:editId||Date.now(),d:t.slice(0,10),t:t.slice(11),w,g:$('#fg').value,n:$('#fn').value};
+if(Date.parse(t)>Date.now()+36e5)return toast('不能記錄未來的時間','#b45309');
+const e={id:editId||nid(),d:t.slice(0,10),t:t.slice(11),w,g:$('#fg').value,n:$('#fn').value};
 const prev=sorted().filter(x=>x.id!==e.id&&(x.d+x.t)<(e.d+e.t)).pop();
-if(editId)S.rec=S.rec.map(x=>x.id===editId?e:x);else S.rec.push(e);
+if(editId&&S.rec.some(x=>x.id===editId))S.rec=S.rec.map(x=>x.id===editId?e:x);else S.rec.push(e);
 const wasEdit=!!editId;editId=null;sv();const good=ok(e);const g=award();sv();
 let msg=good?pick('ok',MO):pick('bad',MB),col=good?'#16a34a':'#dc2626';
 const o=dayStat(),l3=[1,2,3].map(i=>o[add(today(),-i+1)]||o[add(today(),-i)]);
@@ -117,7 +132,7 @@ if(g.length)msg+='  新徽章:'+badgesDef().filter(b=>g.includes(b[0])).map(b=>b
 S.coach={m:msg,c:col};sv();persistNote(true);toast(msg,col);
 $('#fw').value='';$('#fn').value='';$('#ft').value=nowL();$('#fg').value=defTag();$('#fc2').style.display='none';$('#fh').firstChild.textContent='新增紀錄 ';render()}
 const PK=K+'_prev';
-function snap(){localStorage.setItem(PK,JSON.stringify({rec:S.rec,cfg:S.cfg,bg:S.bg,coach:S.coach,rem:S.rem,rng:S.rng,t:Date.now()}))}
+function snap(){try{localStorage.setItem(PK,JSON.stringify({rec:S.rec,cfg:S.cfg,bg:S.bg,coach:S.coach,rem:S.rem,rng:S.rng,t:Date.now()}))}catch(e){}}
 function prevNote(){const b=$('#un'),p=JSON.parse(localStorage.getItem(PK)||'null');b.style.display=p?'':'none';if(p)b.textContent='還原上次匯入/清除前的資料('+new Date(p.t).toLocaleString()+',共 '+p.rec.length+' 筆)'}
 function mark(){S.lastExp=Date.now();sv();backupNote()}
 function backupNote(){prevNote();const b=$('#bk'),l=sorted();$('#cn').textContent=l.length?'目前共 '+l.length+' 筆紀錄('+l[0].d+' ~ '+l[l.length-1].d+')':'目前沒有紀錄';$('#le').textContent=S.lastExp?'上次匯出:'+new Date(S.lastExp).toLocaleString():'尚未匯出過';if(!l.length)return b.style.display='none';
@@ -139,17 +154,18 @@ else tr=r?'近期趨勢未下降,無法預估達標日':'紀錄滿 7 天後可�
 if(last&&(gap>1.5||late)){tr+=' <span class="w">進度落後</span>';act='<button class="s" id="rp" style="margin-top:8px">重新規劃目標</button>'}
 fc=tr}}
 else fc='維持區間 '+f1(c.wt-c.band)+'~'+f1(c.wt+c.band)+' kg'+(last&&last.w>c.wt+c.band?' <span class="w">已高於上限,請留意</span>':'');
-$('#fc').innerHTML=fc;$('#act').innerHTML=act;if($('#mt'))$('#mt').onclick=()=>{c.mode='maintain';sv();fill();render()};if($('#rp'))$('#rp').onclick=replan;
+$('#fc').innerHTML=fc;$('#act').innerHTML=act;if($('#mt'))$('#mt').onclick=()=>{const h=pushHist(c);c.mode='maintain';c.hist=h;sv();fill();render()};if($('#rp'))$('#rp').onclick=replan;
 chart();}
 backupNote();coach();const s=streak(),yd=dayStat()[today()]?0:streak(true);$('#st').innerHTML='目前連續達成 <b>'+s+'</b> 天'+(yd?'<div class="hint">今天還沒記錄,記錄並達成後會接續昨天為止的 '+yd+' 天</div>':'');$('#bd').innerHTML=badgesDef().map(b=>`<span class="chip ${S.bg[b[0]]?'on':''}">${b[1]}</span>`).join('');
 const fl=$('#tf').value,rows=[...l].reverse().filter(e=>!fl||e.g===fl).slice(0,60);
-$('#tb').innerHTML='<tr><th>時間</th><th>時段</th><th>kg</th><th>目標</th><th>差距</th><th>備註</th><th></th></tr>'+rows.map(e=>{const t=c?(c.mode==='maintain'?c.wt:tg(e.d)):NaN,df=e.w-t,good=c&&ok(e);return`<tr><td class="c1">${e.d.slice(5)} ${e.t}</td><td class="c2">${e.g||''}</td><td class="c3">${f1(e.w)}</td><td class="c4">${f1(t)}</td><td class="c5" style="color:var(--${c?(good?'ok':'bad'):'na'});font-weight:600">${isNaN(df)?'–':(df>0?'+':'')+f1(df)}</td><td class="c6">${(e.n||'').replace(/</g,'&lt;')}</td><td class="c7"><a href="#" data-e="${e.id}">編輯</a> <a href="#" data-x="${e.id}">刪</a></td></tr>`}).join('')}
+$('#tb').innerHTML='<tr><th>時間</th><th>時段</th><th>kg</th><th>目標</th><th>差距</th><th>備註</th><th></th></tr>'+rows.map(e=>{const t=c?tg(e.d):NaN,df=e.w-t,good=c&&ok(e);return`<tr><td class="c1">${e.d.slice(5)} ${e.t}</td><td class="c2">${esc(e.g)}</td><td class="c3">${f1(e.w)}</td><td class="c4">${f1(t)}</td><td class="c5" style="color:var(--${c?(good?'ok':'bad'):'na'});font-weight:600">${isNaN(df)?'–':(df>0?'+':'')+f1(df)}</td><td class="c6">${esc(e.n)}</td><td class="c7"><a href="#" data-e="${e.id}">編輯</a> <a href="#" data-x="${e.id}">刪</a></td></tr>`}).join('')}
 function chart(){const c=S.cfg,l=sorted(),svg=$('#ch'),R=S.rng||(c&&c.weeks*7>90?'30':'all');document.querySelectorAll('#rg button').forEach(b=>{b.className=b.dataset.r===R?'':'s'});if(!c)return svg.innerHTML='';
 const W=Math.max(300,Math.round(svg.parentNode.clientWidth)||640),H=W<500?250:300,L=36,Rm=8,T=10,B=24,px=dn(c.d0),endP=px+Math.round(c.weeks*7),lastD=l.length?dn(l[l.length-1].d)+1:0,mt=c.mode==='maintain';
 let x0,x1;if(R==='all'){x0=px;x1=Math.max(endP,lastD,px+7)}else{x1=Math.max(dn(today())+1,lastD);x0=x1-(+R)}
 const xs=e=>dn(e.d)+(+e.t.slice(0,2)*60+ +e.t.slice(3))/1440,tv=v=>Math.max(c.wt,c.w0-dd()*(v-px)),a0=Math.max(x0,px);
 const lp=[a0].concat(endP>a0&&endP<x1?[endP]:[],[x1]),vis=l.filter(e=>{const v=xs(e);return v>=x0&&v<=x1});
-const m=dayStat(),ks=Object.keys(m).sort(),ma=ks.filter(k=>dn(k)>=x0&&dn(k)<x1).map(k=>{const dk=dn(k),w=ks.filter(j=>dn(j)<=dk&&dn(j)>dk-7).map(j=>m[j].mean);return[dk+.5,w.reduce((p,q)=>p+q)/w.length]});
+const m=dayStat(),ks=Object.keys(m).sort(),kd=ks.map(dn),ma=[];let lo=0;
+for(let i=0;i<ks.length;i++){while(kd[lo]<=kd[i]-7)lo++;if(kd[i]>=x0&&kd[i]<x1){let sm=0;for(let j=lo;j<=i;j++)sm+=m[ks[j]].mean;ma.push([kd[i]+.5,sm/(i-lo+1)])}}
 const ws=vis.map(e=>e.w).concat(ma.map(p=>p[1]),mt?[c.wt-c.band,c.wt+c.band]:lp.map(tv));
 const mn=Math.min(...ws)-.5,mx=Math.max(...ws)+.5,X=v=>L+(v-x0)/(x1-x0)*(W-L-Rm),Y=v=>T+(mx-v)/(mx-mn)*(H-T-B);let o='';
 for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4;o+=`<line x1="${L}" x2="${W-Rm}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--bd)"/><text x="${L-4}" y="${Y(v)+4}" font-size="11" text-anchor="end" fill="var(--mu)">${f1(v)}</text>`}
@@ -158,7 +174,7 @@ for(let d=a0;d<=Math.min(dn(today()),x1-1);d++){if(!m[add(c.d0,d-px)])o+=`<line 
 if(mt)o+=`<rect x="${L}" y="${Y(c.wt+c.band)}" width="${W-L-Rm}" height="${Math.abs(Y(c.wt-c.band)-Y(c.wt+c.band))}" fill="var(--ok)" opacity=".12"/>`;
 else o+=`<polyline points="${lp.map(v=>X(v)+','+Y(tv(v))).join(' ')}" fill="none" stroke="var(--pri)" stroke-dasharray="5 4" stroke-width="2"/>`;
 if(ma.length>1)o+=`<polyline points="${ma.map(p=>X(p[0])+','+Y(p[1])).join(' ')}" fill="none" stroke="#f59e0b" stroke-width="2.5"/>`;
-vis.forEach(e=>{o+=`<circle cx="${X(xs(e))}" cy="${Y(e.w)}" r="${R==='all'&&x1-x0>120?3:(W<500?5.5:4.5)}" fill="var(--${ok(e)?'ok':'bad'})" stroke="var(--card)" stroke-width="1.5"><title>${e.d} ${e.t} ${e.g||''} ${f1(e.w)}kg</title></circle>`});svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.innerHTML=o}
+vis.forEach(e=>{o+=`<circle cx="${X(xs(e))}" cy="${Y(e.w)}" r="${R==='all'&&x1-x0>120?3:(W<500?5.5:4.5)}" fill="var(--${ok(e)?'ok':'bad'})" stroke="var(--card)" stroke-width="1.5"><title>${esc(e.d+' '+e.t+' '+(e.g||''))} ${f1(e.w)}kg</title></circle>`});svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.innerHTML=o}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(chart,150)});$('#ch').onclick=ev=>{const c=ev.target.closest('circle');$('#ci').textContent=c?c.textContent:''};
 document.querySelectorAll('#rg button').forEach(b=>b.onclick=()=>{S.rng=b.dataset.r;sv();chart()});
 function fill(){const c=S.cfg||{};$('#h').value=c.h||'';$('#w0').value=c.w0||'';$('#wt').value=c.wt||'';$('#wk').value=c.weeks?Math.round(c.weeks*10)/10:'';$('#pm').value=c.pm||(c.weeks?'weeks':'rate');$('#cap').value=c.cap||0.7;$('#d0').value=c.d0||today();$('#bn').value=c.band||1;$('#md').value=c.mode||'lose';$('#rm').checked=S.rem.on;$('#r1').value=S.rem.m;$('#r2').value=S.rem.n;pv()}
@@ -175,14 +191,14 @@ if(!(c.w0>20&&c.wt>20&&c.weeks>0))return toast('請填寫完整資料','#b45309'
 if(c.mode==='lose'&&c.wt>=c.w0)return toast('目標體重需低於起始體重(或改用維持模式)','#b45309');
 const w=c.mode==='lose'?warns(c,(c.w0-c.wt)/c.weeks):[];
 if(w.length&&!confirm('安全提醒:\n'+w.join('\n')+'\n\n仍要儲存嗎?'))return;
-S.cfg=c;sv();toast('設定已儲存','#16a34a');$('#sd').open=false;render()};
+c.hist=S.cfg?(S.cfg.mode!==c.mode?pushHist(S.cfg):(S.cfg.hist||[])):[];S.cfg=c;sv();toast('設定已儲存','#16a34a');$('#sd').open=false;render()};
 ['h','w0','wt','wk','cap','d0','bn','md','pm'].forEach(i=>$('#'+i).oninput=pv);
 const defTag=()=>{const h=new Date().getHours();return h>=20||h<4?'睡前':h<10?'早晨空腹':'一般'};
 function bmiTag(b){if(isNaN(b))return'';const[t,c]=b<18.5?['過輕','#d97706']:b<24?['正常','#16a34a']:b<27?['過重','#d97706']:['肥胖','#dc2626'];return`<div style="margin-top:2px"><span class="chip" style="background:${c};color:#fff;border-color:${c}">${t}</span></div>`}
 function coach(){const c=S.cfg,e=$('#co');const t=c?(c.mode==='maintain'?'維持區間 '+f1(c.wt-c.band)+'~'+f1(c.wt+c.band)+' kg':'今日理想目標 '+f1(tg(today()))+' kg'):'尚未設定目標';const k=S.coach||{m:'歡迎!設定好目標後,每天早晚各記錄一次,這裡會顯示最近一次的回饋與建議。',c:'#2563eb'};e.style.borderLeft='5px solid '+k.c;e.innerHTML='<div style="font-size:12px;color:var(--mu)">🧭 教練回饋 · '+t+'</div><div style="margin-top:4px">'+k.m+'</div>'}
-function replan(){const c=S.cfg,l=sorted(),cur=l[l.length-1].w,sug=Math.max(1,Math.ceil((cur-c.wt)/c.cap)),v=prompt('重新規劃:從目前體重 '+f1(cur)+' kg 起算,預計幾週達標?\n(依安全上限建議至少 '+sug+' 週)',sug);if(!v||!(+v>0))return;S.cfg={...c,w0:cur,d0:today(),weeks:+v,pm:'weeks'};sv();fill();render();toast('已重新規劃目標','#16a34a')}
+function replan(){const c=S.cfg,l=sorted(),cur=l[l.length-1].w,sug=Math.max(1,Math.ceil((cur-c.wt)/c.cap)),v=prompt('重新規劃:從目前體重 '+f1(cur)+' kg 起算,預計幾週達標?\n(依安全上限建議至少 '+sug+' 週)',sug);if(!v||!(+v>0))return;S.cfg={...c,hist:pushHist(c),w0:cur,d0:today(),weeks:+v,pm:'weeks'};sv();fill();render();toast('已重新規劃目標','#16a34a')}
 $('#fs').onclick=save;$('#fc2').onclick=()=>{editId=null;$('#fw').value='';$('#fn').value='';$('#ft').value=nowL();$('#fg').value=defTag();$('#fc2').style.display='none';$('#fh').firstChild.textContent='新增紀錄 '};
-$('#tb').onclick=ev=>{const a=ev.target.closest('a');if(!a)return;ev.preventDefault();if(a.dataset.x){if(confirm('刪除此紀錄?')){S.rec=S.rec.filter(e=>e.id!=a.dataset.x);sv();render()}}else{const e=S.rec.find(x=>x.id==a.dataset.e);editId=e.id;$('#ft').value=e.d+'T'+e.t;$('#fw').value=e.w;$('#fn').value=e.n;$('#fg').value=e.g||'一般';$('#fc2').style.display='';$('#fh').firstChild.textContent='編輯紀錄 ';scrollTo(0,0)}};
+$('#tb').onclick=ev=>{const a=ev.target.closest('a');if(!a)return;ev.preventDefault();if(a.dataset.x){if(confirm('刪除此紀錄?')){S.rec=S.rec.filter(e=>e.id!=a.dataset.x);if(String(editId)===a.dataset.x)$('#fc2').click();sv();render()}}else{const e=S.rec.find(x=>x.id==a.dataset.e);editId=e.id;$('#ft').value=e.d+'T'+e.t;$('#fw').value=e.w;$('#fn').value=e.n;$('#fg').value=e.g||'一般';$('#fc2').style.display='';$('#fh').firstChild.textContent='編輯紀錄 ';scrollTo(0,0)}};
 const q=x=>'"'+String(x==null?'':x).replace(/"/g,'""')+'"';
 const csvText=()=>'\ufeffdate,time,tag,weight,note\n'+['#config,,,,'+q(JSON.stringify(S.cfg||{}))].concat(sorted().map(e=>[e.d,e.t,q(e.g),e.w,q(e.n)].join(','))).join('\n');
 const backupCsv=()=>{mark();dl('weight-backup-'+today()+'.csv',csvText(),'text/csv')};
@@ -204,7 +220,9 @@ function parseCsv(t){const r=[];let a=[],f='',u=false;t=t.replace(/^\ufeff/,'');
 let impMode='replace';$('#im').onclick=()=>{impMode='replace';$('#if').click()};$('#mg').onclick=()=>{impMode='merge';$('#if').click()};
 $('#un').onclick=()=>{const p=JSON.parse(localStorage.getItem(PK)||'null');if(!p||!confirm('還原到 '+new Date(p.t).toLocaleString()+' 的資料('+p.rec.length+' 筆)?目前資料會換成可再還原的快照。'))return;snap();S.rec=p.rec;S.cfg=p.cfg;S.bg=p.bg||{};S.coach=p.coach;if(p.rem)S.rem=p.rem;S.rng=p.rng;sv();fill();render();toast('已還原','#16a34a')};
 $('#if').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const r=parseCsv(await f.text()).filter(a=>a.length>1||a[0]),h=r.shift().map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);if(ix('date')<0||ix('weight')<0)throw 0;
-let cfg=null,bad=0;const rs=[];r.forEach((a,i)=>{const d=(a[ix('date')]||'').trim();if(d==='#config'){try{cfg=JSON.parse(a[ix('note')])}catch(e){}return}const w=+a[ix('weight')];if(/^\d{4}-\d\d-\d\d$/.test(d)&&w>20)rs.push({id:Date.now()+i,d,t:(a[ix('time')]||'07:00').trim(),g:ix('tag')<0?'':a[ix('tag')]||'',w,n:ix('note')<0?'':a[ix('note')]||''});else bad++});
+let cfg=null,bad=0;const rs=[];r.forEach(a=>{const d0=(a[ix('date')]||'').trim();if(d0==='#config'){try{cfg=cleanCfg(JSON.parse(a[ix('note')]))}catch(e){}return}
+const d=nD(d0),w=+a[ix('weight')],g0=ix('tag')<0?'':(a[ix('tag')]||'').trim();
+if(d&&w>20&&w<400)rs.push({id:nid(),d,t:nT(a[ix('time')]),g:TAGS.includes(g0)?g0:'',w,n:ix('note')<0?'':(a[ix('note')]||'')});else bad++});
 const hc=cfg&&cfg.w0;if(!rs.length&&!hc)throw 0;
 if(impMode==='merge'){const key=e=>e.d+' '+e.t,have=new Map(S.rec.map(e=>[key(e),e])),nw=[];let dup=0,diff=0;rs.forEach(e=>{const k=key(e),o=have.get(k);if(o){dup++;if(o.w!==e.w)diff++}else{have.set(k,e);nw.push(e)}});
 if(!nw.length&&!(hc&&!S.cfg)){toast('沒有需要新增的紀錄(重複 '+dup+' 筆)','#b45309');ev.target.value='';return}
@@ -212,8 +230,8 @@ if(!confirm('合併匯入:新增 '+nw.length+' 筆;略過重複 '+dup+' 筆'+(di
 snap();S.rec=S.rec.concat(nw);if(hc&&!S.cfg)S.cfg=cfg;award();sv();fill();render();toast('已合併,新增 '+nw.length+' 筆','#16a34a');ev.target.value='';return}
 if(!confirm('匯入 '+rs.length+' 筆紀錄'+(hc?'與目標設定':'')+(bad?'(略過 '+bad+' 列無效資料)':'')+'。\n⚠️ 目前 '+S.rec.length+' 筆紀錄將被全部覆蓋(之後可用「還原」按鈕復原)。確定?'))return;snap();
 S.rec=rs;if(hc)S.cfg=cfg;S.bg={};award();sv();fill();render();toast('匯入完成','#16a34a')}catch(e){toast('檔案格式錯誤','#dc2626')}ev.target.value=''};
-['rm','r1','r2'].forEach(i=>$('#'+i).onchange=async()=>{S.rem={on:$('#rm').checked,m:$('#r1').value,n:$('#r2').value};if(S.rem.on&&'Notification'in window&&Notification.permission==='default')await Notification.requestPermission();sv()});
-setInterval(()=>{if(!S.rem.on||!('Notification'in window)||Notification.permission!=='granted')return;const d=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());if((hm===S.rem.m||hm===S.rem.n)&&setInterval.l!==today()+hm){setInterval.l=today()+hm;new Notification('該量體重了 ⚖️',{body:hm===S.rem.m?'晨起量一下,記錄今天的起點':'睡前量一下,收個尾'})}},20000);
+['rm','r1','r2'].forEach(i=>$('#'+i).onchange=async()=>{S.rem={on:$('#rm').checked,m:$('#r1').value,n:$('#r2').value};if(S.rem.on&&'Notification'in window&&Notification.permission==='default')await Notification.requestPermission();sv();if(i==='rm'&&S.rem.on&&'Notification'in window&&Notification.permission==='granted')notify('提醒已開啟','到設定的時間會提醒你(需保持頁面開啟)')});
+setInterval(()=>{if(!S.rem.on||!('Notification'in window)||Notification.permission!=='granted')return;const d=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());if((hm===S.rem.m||hm===S.rem.n)&&setInterval.l!==today()+hm){setInterval.l=today()+hm;notify('該量體重了 ⚖️',hm===S.rem.m?'晨起量一下,記錄今天的起點':'睡前量一下,收個尾')}},20000);
 try{$('#mf').href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify({name:'體重紀錄',short_name:'體重',display:'standalone',start_url:location.href,background_color:'#16a34a',theme_color:'#16a34a',icons:[{src:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#16a34a"/><text x="50" y="68" font-size="56" text-anchor="middle">⚖️</text></svg>'),sizes:'any',type:'image/svg+xml',purpose:'any'}]}))}catch(e){}
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 persistNote(true);fill();$('#ft').value=nowL();$('#fg').value=defTag();$('#tf').onchange=render;render();if(!S.intro)$('#intro').style.display='flex';$('#ok1').onclick=()=>{S.intro=1;sv();$('#intro').style.display='none'};
