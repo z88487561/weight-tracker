@@ -7,7 +7,7 @@
 - **手機友善**:可「加入主畫面」當 App 使用,支援離線。
 
 >   
-> `https://z88487561.github.io/weight-tracker/`
+> https://z88487561.github.io/weight-tracker/
 
 ---
 
