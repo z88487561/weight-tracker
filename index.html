@@ -44,7 +44,7 @@ h2 small{display:block;margin-top:2px;font-size:12px}#fs{flex:1 1 100%}#toast{fo
 #tb .c7{grid-column:1/-1;display:flex;gap:16px}
 }
 </style></head><body><main>
-<h1>⚖️ 體重紀錄</h1>
+<h1 style="display:flex;align-items:center;gap:8px"><img src="icons/icon-192.png" alt="" width="28" height="28" style="border-radius:7px">體重紀錄</h1>
 <details class="c" id="sd"><summary><b>基本資料與目標</b></summary>
 <div style="margin-top:8px"><label>模式</label><select id="md"><option value="lose">減重模式:朝目標體重逐日下降</option><option value="maintain">維持模式:守住目標體重附近</option></select><div id="mh" class="hint"></div></div>
 <div class="g" style="margin-top:8px">
@@ -100,7 +100,7 @@ o.hist=(Array.isArray(c.hist)?c.hist:[]).map(h=>{h=h||{};const p={until:nD(h.unt
 const PF=['mode','w0','wt','weeks','d0','band'];
 function pushHist(old){const h=(old.hist||[]).slice();if(S.rec.length){const o={until:today()};PF.forEach(k=>o[k]=old[k]);h.push(o)}return h}
 const planAt=d=>{const c=S.cfg;for(const h of c.hist||[])if(d<h.until)return h;return c};
-async function notify(t,b){try{new Notification(t,{body:b});return}catch(e){}try{const r=await navigator.serviceWorker.getRegistration();if(r)await r.showNotification(t,{body:b})}catch(e){}}
+async function notify(t,b){try{new Notification(t,{body:b,icon:'icons/icon-192.png'});return}catch(e){}try{const r=await navigator.serviceWorker.getRegistration();if(r)await r.showNotification(t,{body:b,icon:'icons/icon-192.png',badge:'icons/icon-192.png'})}catch(e){}}
 const dd=()=>{const c=S.cfg;return(c.w0-c.wt)/(c.weeks*7)};
 const endD=()=>add(S.cfg.d0,Math.round(S.cfg.weeks*7));
 const tg=d=>{const c=planAt(d);return c.mode==='maintain'?c.wt:r1(Math.min(c.w0,Math.max(c.wt,c.w0-(c.w0-c.wt)/(c.weeks*7)*(dn(d)-dn(c.d0)))))};
@@ -235,7 +235,7 @@ snap();S.rec=S.rec.concat(nw);if(hc&&!S.cfg)S.cfg=cfg;award();sv();fill();render
 if(!confirm('匯入 '+rs.length+' 筆紀錄'+(hc?'與目標設定':'')+(bad?'(略過 '+bad+' 列無效資料)':'')+'。\n⚠️ 目前 '+S.rec.length+' 筆紀錄將被全部覆蓋(之後可用「還原」按鈕復原)。確定?'))return;snap();
 S.rec=rs;if(hc)S.cfg=cfg;S.bg={};award();sv();fill();render();toast('匯入完成','#16a34a')}catch(e){toast('檔案格式錯誤','#dc2626')}ev.target.value=''};
 ['rm','r1','r2'].forEach(i=>$('#'+i).onchange=async()=>{S.rem={on:$('#rm').checked,m:$('#r1').value,n:$('#r2').value};if(S.rem.on&&'Notification'in window&&Notification.permission==='default')await Notification.requestPermission();sv();if(i==='rm'&&S.rem.on&&'Notification'in window&&Notification.permission==='granted')notify('提醒已開啟','到設定的時間會提醒你(需保持頁面開啟)')});
-setInterval(()=>{if(!S.rem.on||!('Notification'in window)||Notification.permission!=='granted')return;const d=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());if((hm===S.rem.m||hm===S.rem.n)&&setInterval.l!==today()+hm){setInterval.l=today()+hm;notify('該量體重了 ⚖️',hm===S.rem.m?'晨起量一下,記錄今天的起點':'睡前量一下,收個尾')}},20000);
+setInterval(()=>{if(!S.rem.on||!('Notification'in window)||Notification.permission!=='granted')return;const d=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());if((hm===S.rem.m||hm===S.rem.n)&&setInterval.l!==today()+hm){setInterval.l=today()+hm;notify('該量體重了',hm===S.rem.m?'晨起量一下,記錄今天的起點':'睡前量一下,收個尾')}},20000);
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 persistNote(true);fill();$('#ft').value=nowL();$('#fg').value=defTag();$('#tf').onchange=render;render();if(!S.intro)$('#intro').style.display='flex';$('#ok1').onclick=()=>{S.intro=1;sv();$('#intro').style.display='none'};
 </script></body></html>
