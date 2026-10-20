@@ -147,7 +147,7 @@ date,time,tag,weight,note
   }  
     
 - 日期以 `YYYY-MM-DD` 字串處理,天數計算使用 `Date.UTC`,不受時區與夏令時間影響。  
-- PWA manifest 以 data URI 內嵌,圖示為內嵌 SVG。
+- PWA:`manifest.webmanifest` 與 `icons/`(192、512、maskable-512、apple-touch-icon)需與 `index.html` 放在同一層部署。
 
 ## 免責聲明
 

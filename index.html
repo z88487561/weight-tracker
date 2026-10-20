@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>體重紀錄</title><meta name="theme-color" content="#16a34a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="體重"><link rel="manifest" id="mf">
+<title>體重紀錄</title><meta name="theme-color" content="#16a34a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="體重"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" href="icons/icon-192.png">
 <style>
 :root{--bg:#f6f7f9;--card:#fff;--tx:#1f2937;--mu:#6b7280;--bd:#e5e7eb;--ok:#16a34a;--bad:#dc2626;--na:#9ca3af;--pri:#2563eb}
 @media(prefers-color-scheme:dark){:root{--bg:#111418;--card:#1b2027;--tx:#e5e7eb;--mu:#9ca3af;--bd:#2d343e}}
@@ -236,7 +236,6 @@ if(!confirm('匯入 '+rs.length+' 筆紀錄'+(hc?'與目標設定':'')+(bad?'(�
 S.rec=rs;if(hc)S.cfg=cfg;S.bg={};award();sv();fill();render();toast('匯入完成','#16a34a')}catch(e){toast('檔案格式錯誤','#dc2626')}ev.target.value=''};
 ['rm','r1','r2'].forEach(i=>$('#'+i).onchange=async()=>{S.rem={on:$('#rm').checked,m:$('#r1').value,n:$('#r2').value};if(S.rem.on&&'Notification'in window&&Notification.permission==='default')await Notification.requestPermission();sv();if(i==='rm'&&S.rem.on&&'Notification'in window&&Notification.permission==='granted')notify('提醒已開啟','到設定的時間會提醒你(需保持頁面開啟)')});
 setInterval(()=>{if(!S.rem.on||!('Notification'in window)||Notification.permission!=='granted')return;const d=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());if((hm===S.rem.m||hm===S.rem.n)&&setInterval.l!==today()+hm){setInterval.l=today()+hm;notify('該量體重了 ⚖️',hm===S.rem.m?'晨起量一下,記錄今天的起點':'睡前量一下,收個尾')}},20000);
-try{$('#mf').href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify({name:'體重紀錄',short_name:'體重',display:'standalone',start_url:location.href,background_color:'#16a34a',theme_color:'#16a34a',icons:[{src:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#16a34a"/><text x="50" y="68" font-size="56" text-anchor="middle">⚖️</text></svg>'),sizes:'any',type:'image/svg+xml',purpose:'any'}]}))}catch(e){}
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 persistNote(true);fill();$('#ft').value=nowL();$('#fg').value=defTag();$('#tf').onchange=render;render();if(!S.intro)$('#intro').style.display='flex';$('#ok1').onclick=()=>{S.intro=1;sv();$('#intro').style.display='none'};
 </script></body></html>
