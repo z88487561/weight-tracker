@@ -65,9 +65,6 @@ h2 small{display:block;margin-top:2px;font-size:12px}#fs{flex:1 1 100%}#toast{fo
 
 <div class="c"><h2>連續達成與徽章</h2><div id="st"></div><div id="bd"></div></div>
 
-<div class="c"><h2>紀錄列表 <select id="tf" style="width:auto;display:inline-block;padding:2px 6px;font-size:13px"><option value="">全部時段</option><option>早晨空腹</option><option>睡前</option><option>餐後</option><option>運動後</option><option>一般</option></select></h2><div class="sc"><table id="tb"></table></div></div>
-
-
 <details class="c"><summary><b>備份、提醒與資料管理</b></summary><div style="margin-top:8px;display:grid;gap:8px">
 <div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.7"><b>💾 資料安全</b><br>你的紀錄儲存在此裝置的瀏覽器中,不會自動同步到其他裝置。<br>⚠️ 清除瀏覽器網站資料、重設裝置或更換裝置,都可能造成紀錄遺失。建議定期備份。</div>
 <div id="le" style="font-size:13px;color:var(--mu)"></div><div id="ps" style="font-size:13px;color:var(--mu)"></div>
@@ -77,6 +74,9 @@ h2 small{display:block;margin-top:2px;font-size:12px}#fs{flex:1 1 100%}#toast{fo
 <label style="display:flex;gap:8px;align-items:center;color:var(--tx)"><input type="checkbox" id="rm" style="width:auto"> 開啟提醒</label>
 <div class="row"><div><label>晨起</label><input type="time" id="r1"></div><div><label>睡前</label><input type="time" id="r2"></div></div>
 <div class="w">提醒僅在網頁開啟(含背景分頁)時觸發;iOS 須先「加入主畫面」。要離線/安裝請將 index.html 與 sw.js 放在 HTTPS 網站同一資料夾。</div></div></details>
+<div class="c"><h2>紀錄列表 <select id="tf" style="width:auto;display:inline-block;padding:2px 6px;font-size:13px"><option value="">全部時段</option><option>早晨空腹</option><option>睡前</option><option>餐後</option><option>運動後</option><option>一般</option></select></h2><div class="sc"><table id="tb"></table></div></div>
+
+
 </main><div id="intro" role="dialog" aria-modal="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;align-items:center;justify-content:center;padding:16px"><div class="c" style="max-width:420px;width:100%"><h2>💾 資料儲存提醒</h2><p style="margin:0 0 8px">你的體重紀錄目前儲存在此裝置的瀏覽器中,<b>不會自動同步</b>到其他手機或電腦。</p><p style="margin:0 0 8px">如果清除瀏覽器的網站資料、重設裝置或更換裝置,紀錄可能會遺失。</p><p style="margin:0 0 12px">建議定期使用頁面下方「備份、提醒與資料管理」裡的「分享備份」或「下載備份 CSV」。</p><button id="ok1" style="width:100%">知道了,開始使用</button></div></div>
 <div id="toast"></div>
 <script>
