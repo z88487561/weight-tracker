@@ -1,4 +1,4 @@
-const C='weight-tracker-v3';
+const C='weight-tracker-v4';
 const ASSETS=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(C).then(c=>c.addAll(ASSETS)).catch(()=>{}).then(()=>self.skipWaiting()));
